@@ -7,21 +7,24 @@ All steps are run from the script master.m in the directory NewFunctions. I reco
 
 *Recently, there are major issues with the first few sections as the IRIS event and waveform request tools have been changed (i.e. Breq_Fast is no longer supported by Earthscope). I have a few hasty fixes to get SAC files in the format we need from existing tools, but for now I recommend sticking with the Alaska_test data which is already in SAC format with the necessary metadata. I will push an update to the code in the near future which works otherwise.
 
-New features: function Auto_Prep_RT retains results in R, T system - no free surface transformation.
+New features: function Generate_RFs_RTZ.m keeps the receiver functions in R, T system - no free surface transformation.
 
 
 
 ##############
 Directions:
 
-The first thing you will need to do is unpack some zip files that contain external packages. These are:
-seizmo.zip
+In order to fit within limits on file sizes and number of files for github uploads, some directories are stored as zip files that need to be unzipped. These are:
 Functions/m_map.zip
-Functions/rdseedv5.3.1.zip
-Functions/taup.zip
 NewFunctions/PROPMAT.zip
 
+The second thing you will need to do is download the seizmo package and place it in the top directory:
+https://epsc.wustl.edu/~ggeuler/codes/m/seizmo/
 
+Similarly, download the TauP package and place it in the Functions directory: 
+https://www.seis.sc.edu/taup/
+
+Now you're ready!
 
 
 The steps in master.m (some of this is repeated in the comments in the script)
