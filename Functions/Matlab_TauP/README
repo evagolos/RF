@@ -1,0 +1,19 @@
+INSTALL
+-------
+
+1. Add 
+        /quebradaUsers/sfrench/Documents/Matlab_TauP 
+   to your Matlab path
+
+2. Add 
+        /usr/local/taup/lib/TauP-1.1.7.jar
+        /usr/local/taup/lib/log4j-1.2.8.jar
+        /usr/local/taup/lib/seisFile-1.0.1.jar
+   to your Matlab javaclasspath   
+
+
+CAVEAT
+------
+
+You may not also have matTaup installed.
+

@@ -1,0 +1,99 @@
+% Make synthetic receiver functions for a given velocity model.
+% Written by Eva Golos, 7/2021. Based off 'RFcomp' functionality from Junlin Hua/Isabella Gama's code.
+
+% Load synthetic model
+
+
+% Get ray parameter
+
+
+
+
+
+rp_ref= [rp_min,rp_med,rp_max];
+depth = 0:450;
+
+[LonG,LatG,DepG] = meshgrid(orimodel_s.Vs_Model.Longitude,orimodel_s.Vs_Model.Latitude,orimodel_s.Vs_Model.Depth);
+latmin = orimodel_s.Vs_Model.Latitude(1);
+latmax = orimodel_s.Vs_Model.Latitude(end);
+lonmin = orimodel_s.Vs_Model.Longitude(1);
+lonmax = orimodel_s.Vs_Model.Longitude(end);
+lat_model = latmin:1:latmax;
+lon_model = lonmin:1:lonmax;
+[LonM,LatM,DepM] = meshgrid(lon_model,lat_model,depth');
+Vs_M = interp3(double(LonG),double(LatG),double(DepG),...
+    double(orimodel_s.Vs_Model.Vs),double(LonM),double(LatM),double(DepM));
+Vp_M = interp3(double(LonG),double(LatG),double(DepG),...
+    double(orimodel_p.Vp_Model.Vp),double(LonM),double(LatM),double(DepM));
+max_V = nanmax(nanmax(nanmax(Vp_M)));
+max_rp = sind(85)/max_V;
+ind_ex = find(rp_ref>max_rp);
+if ~isempty(ind_ex)
+    rp_ref(ind_ex) = [];
+    rp_ref = [rp_ref,max_rp];
+end
+
+Period = 13;
+recordid='RFcomp';
+
+cd([basedir,'NewFunctions/PROPMAT/']) % Can we add as path instead??
+
+ilat= 1; ilon=1; % For now.
+        Vp_ray = permute(Vp_M(ilat,ilon,:),[2,3,1]);
+        Vs_ray = permute(Vs_M(ilat,ilon,:),[2,3,1]);
+        dV_ray = gradient(Vs_ray)./gradient(depth);
+        dV_ray(isnan(dV_ray)) = 0;
+        indv1 = find(~isnan(Vs_ray),1);
+        indv2 = find(~isnan(Vs_ray),1,'last');
+        if isempty(indv1)
+            Vs_ray(isnan(Vs_ray)) = 3.2;
+            Vp_ray(isnan(Vp_ray)) = 5.6;
+            Moho_ray = 100000;
+        else
+            Vs_ray(1:indv1) = Vs_ray(indv1);
+            Vp_ray(1:indv1) = Vp_ray(indv1);
+            if indv2>length(Vs_ray)
+                Vs_ray(indv2:end) = Vs_ray(indv2);
+                Vp_ray(indv2:end) = Vp_ray(indv2);
+            end
+            Moho_ray = depth(dV_ray==max(dV_ray(depth>30 & depth<60)));
+            if length(Moho_ray)>1
+                Moho_ray = Moho_ray(1);
+            end
+        end
+        vs = Vs_ray(1);
+        vp = Vp_ray(1);
+        rho = 2.8;
+        zbot = [];
+        ztop = 0;
+        for idep = 1:length(depth)
+            if abs(Vs_ray(idep)-vs(end))/vs(end)>0.005
+                vs = [vs;Vs_ray(idep)];
+                vp = [vp;Vp_ray(idep)];
+                if depth(idep)<Moho_ray
+                    rho = [rho;2.8];
+                else
+                    rho = [rho;3.3];
+                end
+                zbot = [zbot;depth(idep)];
+                ztop = [ztop;depth(idep)];
+            end
+        end
+        if ztop(end) ~= depth(end)
+            zbot = [zbot;depth(end)];
+        else
+            zbot = [zbot;depth(end)+1];
+        end
+        for irp = 1:length(rp_ref)
+            write_propmat_syn(ztop,zbot,vp,vs,rho,rp_ref(irp),Period,[recordid,'.mat'],Phase);
+            SynWave = load([basedir,'NewFunctions/PROPMAT/',recordid,'.mat']);
+            if isnan(SynWave.R(100))
+                rf_model(irp,ilat,ilon,:) = nan;
+                continue;
+            end
+            [SynRF,SynTime] = getrf(SynWave.R,SynWave.Z,SynWave.dt,vp(1),vs(1),rp_ref(irp));
+            [SynDepth,Synindts,Synindte] = getdepth(Phase,SynTime,zbot,vp,vs,rp_ref(irp));
+            SynRF_dep = interp1(SynDepth,SynRF(Synindts:Synindte),depth);
+            SynRF_dep(isnan(SynRF_dep)) = 0;
+            rf_model(irp,ilat,ilon,:) = permute(SynRF_dep,[1,4,2,3]);
+        end
