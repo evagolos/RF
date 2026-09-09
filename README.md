@@ -1,11 +1,11 @@
-11/2024
+9/2026
 
 Welcome to the Wisconsin version of the "Fischer group+" receiver function and CCP stack code.
 Contributions to code from: Eva Golos, Junlin Hua, Emily Hopper, Vedran Lekic, David Abt, and others…
 
 All steps are run from the script master.m in the directory NewFunctions. I recommend running it a section at a time. The structure of this code is such that that Auto_Prep.m and Generate_RFs.m contain many functions which handle the majority of the workflow, including data downloading*, arrival picking (necessary to select analysis windows in regions where the arrival differs from predictions using 1D models via TauP), free-surface transformation, and receiver function generation and stacking. Different flags are used to call different functionality from master.m. CCP stacking is performed most currently through function ccp_stack_slopeangle.
 
-*Recently, there are major issues with the first few sections as the IRIS event and waveform request tools have been changed (i.e. Breq_Fast is no longer supported by Earthscope). I have a few hasty fixes to get SAC files in the format we need from existing tools, but for now I recommend sticking with the Alaska_test data which is already in SAC format with the necessary metadata. I will push an update to the code in the near future which works otherwise.
+*Recently, there are major issues with the first few sections as the code was written to use Breq_Fast and that functionality is no longer supported by Earthscope. Other tools are available, but I found that some of them, such as Rover, do not return the needed metadata, so you will have to search for that on your own. I will push an update to the code in the near future.
 
 New features: function Generate_RFs_RTZ.m keeps the receiver functions in R, T system - no free surface transformation.
 
